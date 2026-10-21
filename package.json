@@ -1,0 +1,7 @@
+{
+  "name": "tcc-ia-pedro-leite",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Site escolar sobre Inteligência Artificial com chat Gemini seguro e experiências interativas",
+  "engines": { "node": ">=20" }
+}

@@ -101,15 +101,11 @@
                             <div class="inline-flex items-center gap-2 text-cyan-400 text-xs font-bold tracking-widest uppercase mb-1">
                                 <i data-lucide="sparkles" class="w-4 h-4"></i> Google Gemini API &bull; TCC Inteligente
                             </div>
-                            <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Simulador Neural com Gemini</h2>
-                            <p class="text-slate-400 text-sm">Conectado ao modelo Gemini com contexto do TCC de Pedro Pereira Leite (2026).</p>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Assistente interativo do TCC</h2>
+                            <p class="text-slate-400 text-sm">Converse com o Gemini sobre os temas do TCC. A chave da API fica protegida no servidor, nunca neste navegador.</p>
                         </div>
                         
-                        <div class="flex items-center gap-2 bg-slate-900/90 px-3 py-2 rounded-2xl border border-slate-800">
-                            <i data-lucide="key" class="w-4 h-4 text-cyan-400"></i>
-                            <input type="password" id="apiKeyInput" placeholder="Cole Gemini Key (AI Studio)" class="bg-transparent text-xs text-white focus:outline-none w-40 font-mono" title="Insira sua chave do Google AI Studio">
-                            <button onclick="saveApiKey()" class="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded-lg hover:bg-cyan-500/30 transition-colors">Salvar</button>
-                        </div>
+                        <div class="text-xs text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-xl">Gemini via servidor • chave protegida</div>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -138,20 +134,63 @@
                                     <span class="w-3 h-3 rounded-full bg-rose-500/80"></span>
                                     <span class="w-3 h-3 rounded-full bg-amber-500/80"></span>
                                     <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
-                                    <span class="text-xs font-mono text-cyan-400 ml-2">gemini-1.5-flash (Contexto TCC Pedro Leite)</span>
+                                    <span class="text-xs font-mono text-cyan-400 ml-2">gemini-3.8-flash • contexto do TCC</span>
                                 </div>
                                 <button onclick="clearTerminal()" class="text-xs text-slate-400 hover:text-white transition-colors">Limpar Chat</button>
                             </div>
 
                             <div id="ai-terminal-output" class="p-4 flex-1 overflow-y-auto font-mono text-xs sm:text-sm text-slate-300 space-y-3">
-                                <div class="text-cyan-400 font-semibold">&gt; [SISTEMA]: Assistente Gemini ativado com base no TCC do Instituto Coração de Jesus (Santo André, 2026). Faça sua pergunta!</div>
+                                <div class="text-cyan-400 font-semibold">&gt; [SISTEMA]: Assistente Gemini pronto. Pergunte sobre os temas abordados no TCC!</div>
                             </div>
 
                             <div class="p-3 bg-slate-900/80 border-t border-slate-800 flex gap-2">
-                                <input type="text" id="ai-custom-input" placeholder="Pergunte ao Gemini sobre o TCC..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 font-mono" onkeypress="handleKeyPress(event)">
-                                <button onclick="sendCustomMessage()" class="px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-400 hover:to-indigo-400 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-lg shadow-cyan-500/20">Enviar</button>
+                                <input type="text" id="ai-custom-input" placeholder="Pergunte sobre o TCC..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 font-mono" onkeypress="handleKeyPress(event)">
+                                <button id="ai-send-button" onclick="sendCustomMessage()" class="px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-400 hover:to-indigo-400 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-lg shadow-cyan-500/20">Enviar</button>
                             </div>
+                            <p class="px-3 pb-3 bg-slate-900/80 text-[11px] text-slate-500">Evite enviar senhas, dados pessoais ou informações privadas. As respostas são geradas pela API Gemini.</p>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- EXPERIÊNCIAS INTERATIVAS: QUIZ + DESAFIO -->
+        <section id="experiencias" class="mb-16 scroll-mt-8">
+            <div class="mb-8">
+                <div class="inline-flex items-center gap-2 text-cyan-400 text-xs font-bold tracking-widest uppercase mb-2"><i data-lucide="gamepad-2" class="w-4 h-4"></i> Aprenda fazendo</div>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-3">Teste seus conhecimentos sobre IA</h2>
+                <p class="text-slate-400 max-w-3xl">Encare primeiro um desafio de decisões e depois teste seus conhecimentos no quiz. As atividades são executadas no próprio navegador e funcionam sem chave de API.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="rounded-3xl border border-purple-500/30 bg-slate-900/60 p-6 sm:p-8 shadow-xl shadow-purple-500/5">
+                    <div class="mb-5"><p class="text-purple-400 text-xs font-bold tracking-widest uppercase">Missão 02</p><h3 class="text-2xl font-bold text-white">Desafio: decisão responsável</h3></div>
+                    <p class="text-slate-300 leading-relaxed mb-5">Uma ferramenta de IA sugere uma resposta para um trabalho escolar. Qual atitude demonstra melhor uso crítico da tecnologia?</p>
+                    <div id="challenge-options" class="space-y-3">
+                        <button type="button" data-correct="false" class="challenge-option w-full text-left rounded-xl border border-slate-700 bg-slate-950/70 p-4 text-sm text-slate-200 hover:border-purple-400 transition-colors">Copiar a resposta sem ler, porque a IA sempre acerta.</button>
+                        <button type="button" data-correct="true" class="challenge-option w-full text-left rounded-xl border border-slate-700 bg-slate-950/70 p-4 text-sm text-slate-200 hover:border-purple-400 transition-colors">Conferir as informações, comparar fontes e assumir responsabilidade pelo resultado.</button>
+                        <button type="button" data-correct="false" class="challenge-option w-full text-left rounded-xl border border-slate-700 bg-slate-950/70 p-4 text-sm text-slate-200 hover:border-purple-400 transition-colors">Inserir dados pessoais e privados para obter uma resposta mais detalhada.</button>
+                    </div>
+                    <div id="challenge-feedback" class="hidden mt-5 rounded-xl border p-4 text-sm" role="status" aria-live="polite"></div>
+                    <button id="challenge-reset" type="button" class="hidden mt-5 rounded-xl bg-slate-800 px-5 py-3 text-sm font-bold text-white hover:bg-slate-700 transition-colors">Tentar novamente</button>
+                    <div class="mt-6 rounded-xl border border-slate-800 bg-slate-950/50 p-4"><p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Ideia central do TCC</p><p class="text-sm text-slate-300">A IA pode ampliar capacidades humanas, mas exige avaliação crítica, cuidado com a privacidade e atenção a vieses e impactos sociais.</p></div>
+                </div>
+                <div class="rounded-3xl border border-cyan-500/30 bg-slate-900/60 p-6 sm:p-8 shadow-xl shadow-cyan-500/5">
+                    <div class="flex items-center justify-between gap-4 mb-5">
+                        <div><p class="text-cyan-400 text-xs font-bold tracking-widest uppercase">Missão 01</p><h3 class="text-2xl font-bold text-white">Quiz relâmpago</h3></div>
+                        <span id="quiz-progress" class="font-mono text-xs text-slate-400">Pergunta 1 de 5</span>
+                    </div>
+                    <div class="h-1.5 rounded-full bg-slate-800 overflow-hidden mb-6"><div id="quiz-progress-bar" class="h-full bg-gradient-to-r from-cyan-400 to-indigo-500 transition-all duration-300" style="width:20%"></div></div>
+                    <p id="quiz-question" class="text-white font-semibold text-lg mb-5">Qual evento é considerado o marco oficial do nascimento da Inteligência Artificial como campo de estudo?</p>
+                    <div id="quiz-options" class="space-y-3">
+                        <button type="button" data-answer="0" class="quiz-option w-full text-left rounded-xl border border-slate-700 bg-slate-950/70 p-4 text-sm text-slate-200 hover:border-cyan-400 transition-colors">O artigo de Alan Turing, em 1950</button>
+                        <button type="button" data-answer="1" class="quiz-option w-full text-left rounded-xl border border-slate-700 bg-slate-950/70 p-4 text-sm text-slate-200 hover:border-cyan-400 transition-colors">A Conferência de Dartmouth, em 1956</button>
+                        <button type="button" data-answer="2" class="quiz-option w-full text-left rounded-xl border border-slate-700 bg-slate-950/70 p-4 text-sm text-slate-200 hover:border-cyan-400 transition-colors">A criação da internet, em 1983</button>
+                    </div>
+                    <div id="quiz-feedback" class="hidden mt-5 rounded-xl border p-4 text-sm" role="status" aria-live="polite"></div>
+                    <div class="flex items-center justify-between gap-3 mt-6">
+                        <span id="quiz-score" class="text-sm text-slate-400">Pontuação: 0</span>
+                        <button id="quiz-next" type="button" class="hidden rounded-xl bg-cyan-400 px-5 py-3 text-sm font-bold text-slate-950 hover:bg-cyan-300 transition-colors">Próxima pergunta</button>
+                        <button id="quiz-restart" type="button" class="hidden rounded-xl bg-slate-800 px-5 py-3 text-sm font-bold text-white hover:bg-slate-700 transition-colors">Jogar novamente</button>
                     </div>
                 </div>
             </div>
@@ -339,7 +378,7 @@
         </div>
     </footer>
 
-    <!-- Script de Integração com Google Gemini API -->
+    <!-- Scripts da experiência interativa -->
     <script>
         lucide.createIcons();
 
@@ -397,43 +436,38 @@
         }
         animateNeural();
 
-        // Gerenciamento de Chave API do Gemini
-        let geminiApiKey = localStorage.getItem('tcc_gemini_key') || '';
-        if(geminiApiKey) {
-            document.getElementById('apiKeyInput').value = '••••••••••••';
-        }
-
-        function saveApiKey() {
-            const val = document.getElementById('apiKeyInput').value;
-            if(val && !val.startsWith('••')) {
-                geminiApiKey = val;
-                localStorage.setItem('tcc_gemini_key', val);
-                alert('Chave do Gemini salva com sucesso!');
-                document.getElementById('apiKeyInput').value = '••••••••••••';
-            }
-        }
+        // O navegador conversa somente com /api/chat. A chave Gemini fica no servidor (Vercel).
+        let chatHistory = [];
+        let chatBusy = false;
 
         function appendTerminal(sender, message) {
             const terminal = document.getElementById('ai-terminal-output');
             const msgDiv = document.createElement('div');
-            
-            if (sender === 'user') {
-                msgDiv.innerHTML = `<span class="text-cyan-400 font-bold">&gt; Você:</span> ${message}`;
-            } else {
-                msgDiv.innerHTML = `<span class="text-emerald-400 font-bold">&gt; Gemini (Google):</span> <span class="text-slate-200">${message}</span>`;
-            }
-            
+            msgDiv.className = 'leading-relaxed whitespace-pre-wrap';
+            const label = document.createElement('span');
+            label.className = sender === 'user' ? 'text-cyan-400 font-bold' : 'text-emerald-400 font-bold';
+            label.textContent = sender === 'user' ? '> Você: ' : '> Gemini: ';
+            const body = document.createElement('span');
+            body.className = 'text-slate-200';
+            body.textContent = message;
+            msgDiv.append(label, body);
             terminal.appendChild(msgDiv);
             terminal.scrollTop = terminal.scrollHeight;
         }
 
         function clearTerminal() {
+            chatHistory = [];
             const terminal = document.getElementById('ai-terminal-output');
-            terminal.innerHTML = '<div class="text-cyan-400 font-bold">&gt; [SISTEMA]: Histórico limpo.</div>';
+            terminal.replaceChildren();
+            const message = document.createElement('div');
+            message.className = 'text-cyan-400 font-bold';
+            message.textContent = '> [SISTEMA]: Histórico desta conversa limpo. Pode começar novamente.';
+            terminal.appendChild(message);
         }
 
         function handleKeyPress(event) {
-            if (event.key === 'Enter') {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
                 sendCustomMessage();
             }
         }
@@ -445,84 +479,137 @@
 
         async function sendCustomMessage() {
             const input = document.getElementById('ai-custom-input');
+            const sendButton = document.getElementById('ai-send-button');
             const text = input.value.trim();
-            if (!text) return;
+            if (!text || chatBusy) return;
+            if (text.length > 1200) {
+                appendTerminal('ai', 'Sua pergunta é muito longa. Resuma para até 1.200 caracteres.');
+                return;
+            }
 
             appendTerminal('user', text);
             input.value = '';
+            chatBusy = true;
+            sendButton.disabled = true;
+            sendButton.textContent = 'Pensando…';
 
-            const terminal = document.getElementById('ai-terminal-output');
-            const loadingId = 'loading-' + Date.now();
-            const loadDiv = document.createElement('div');
-            loadDiv.id = loadingId;
-            loadDiv.innerHTML = `<span class="text-amber-400 animate-pulse">&gt; Conectando à API do Google Gemini para inferência em tempo real...</span>`;
-            terminal.appendChild(loadDiv);
-            terminal.scrollTop = terminal.scrollHeight;
+            const pending = document.createElement('div');
+            pending.id = 'gemini-pending';
+            pending.className = 'text-indigo-300 italic';
+            pending.textContent = '> Gemini está elaborando a resposta…';
+            document.getElementById('ai-terminal-output').appendChild(pending);
+            document.getElementById('ai-terminal-output').scrollTop = document.getElementById('ai-terminal-output').scrollHeight;
 
-            if (geminiApiKey) {
-                try {
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            contents: [
-                                {
-                                    role: "user",
-                                    parts: [
-                                        {
-                                            text: `Você é um assistente acadêmico especialista no TCC de Pedro Pereira Leite intitulado "A Inteligência Artificial na Sociedade e na Tecnologia da Informação: Impactos, Aplicações e Cotidiano", apresentado no Instituto Coração de Jesus (Santo André, 2026). Responda de forma clara, técnica e fundamentada baseando-se no trabalho. Pergunta: ${text}`
-                                        }
-                                    ]
-                                }
-                            ]
-                        })
-                    });
-                    
-                    const data = await response.json();
-                    document.getElementById(loadingId).remove();
-                    
-                    if(data.candidates && data.candidates[0].content.parts[0].text) {
-                        appendTerminal('ai', data.candidates[0].content.parts[0].text);
-                    } else if(data.error) {
-                        appendTerminal('ai', `Erro na API do Gemini: ${data.error.message}. Ativando fallback inteligente...`);
-                        triggerLocalSmartEngine(text);
-                    } else {
-                        appendTerminal('ai', 'Resposta inesperada da API. Ativando fallback inteligente...');
-                        triggerLocalSmartEngine(text);
-                    }
-                } catch (e) {
-                    document.getElementById(loadingId).remove();
-                    appendTerminal('ai', 'Falha de rede ao contatar o Gemini. Ativando motor de fallback local...');
-                    triggerLocalSmartEngine(text);
-                }
-            } else {
-                setTimeout(() => {
-                    document.getElementById(loadingId).remove();
-                    triggerLocalSmartEngine(text);
-                }, 700);
+            const nextHistory = [...chatHistory, { role: 'user', text }].slice(-10);
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages: nextHistory })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.error || 'Não foi possível falar com o Gemini.');
+                if (typeof data.reply !== 'string' || !data.reply.trim()) throw new Error('O Gemini retornou uma resposta vazia. Tente novamente.');
+                chatHistory = [...nextHistory, { role: 'model', text: data.reply }].slice(-10);
+                pending.remove();
+                appendTerminal('ai', data.reply);
+            } catch (error) {
+                pending.remove();
+                appendTerminal('ai', error.message || 'Falha de conexão. Tente novamente em instantes.');
+            } finally {
+                chatBusy = false;
+                sendButton.disabled = false;
+                sendButton.textContent = 'Enviar';
+                input.focus();
             }
         }
 
-        function triggerLocalSmartEngine(text) {
-            const lower = text.toLowerCase();
-            let response = "";
+        // Quiz com perguntas baseadas nos temas apresentados no TCC.
+        const quizQuestions = [
+            { q: 'Qual evento é considerado o marco oficial do nascimento da Inteligência Artificial como campo de estudo?', options: ['O artigo de Alan Turing, em 1950', 'A Conferência de Dartmouth, em 1956', 'A criação da internet, em 1983'], correct: 1, why: 'Dartmouth, em 1956, é apresentado no TCC como marco em que o termo Inteligência Artificial foi estabelecido oficialmente.' },
+            { q: 'O que caracteriza a chamada IA Fraca ou estreita?', options: ['É consciente como um ser humano', 'Executa tarefas específicas para as quais foi desenvolvida', 'Resolve qualquer problema sem limites'], correct: 1, why: 'A IA Fraca é voltada a tarefas específicas. A IA Forte, com capacidade geral comparável à humana, permanece teórica no enquadramento do TCC.' },
+            { q: 'Qual é um exemplo de aplicação da IA na saúde?', options: ['Apoio à análise de imagens médicas', 'Eliminar a necessidade de profissionais de saúde', 'Garantir que todo diagnóstico esteja correto'], correct: 0, why: 'O TCC destaca sistemas de análise de imagens médicas como apoio ao diagnóstico, sem afirmar que substituam totalmente os profissionais.' },
+            { q: 'Qual risco ético pode aparecer quando os dados usados por um sistema são enviesados?', options: ['O sistema passa a consumir zero energia', 'O sistema pode reproduzir decisões discriminatórias', 'O sistema se torna automaticamente consciente'], correct: 1, why: 'Vieses algorítmicos podem reproduzir ou ampliar discriminações presentes nos dados.' },
+            { q: 'Por que o TCC menciona o impacto ambiental dos data centers?', options: ['Porque infraestrutura de IA pode consumir muita energia e água', 'Porque data centers não precisam de eletricidade', 'Porque todo modelo funciona sem hardware'], correct: 0, why: 'Treinamento e operação de modelos exigem infraestrutura; consumo de energia e água para resfriamento são preocupações ambientais discutidas no trabalho.' }
+        ];
+        let quizIndex = 0;
+        let quizScore = 0;
+        let quizAnswered = false;
+        const quizQuestionEl = document.getElementById('quiz-question');
+        const quizOptionsEl = document.getElementById('quiz-options');
+        const quizFeedbackEl = document.getElementById('quiz-feedback');
+        const quizNextBtn = document.getElementById('quiz-next');
+        const quizRestartBtn = document.getElementById('quiz-restart');
 
-            if (lower.includes('fraca') || lower.includes('forte') || lower.includes('estreita') || lower.includes('geral')) {
-                response = "Segundo o TCC de Pedro Leite: A IA Fraca (estreita) é um sistema focado em áreas específicas (como traduzir textos ou jogar xadrez; exemplos incluem ChatGPT, Gemini, DeepSeek). Já a IA Forte (geral) recriaria a capacidade humana completa de raciocinar sobre qualquer assunto, mas ainda não existe na sociedade moderna.";
-            } else if (lower.includes('turing') || lower.includes('dartmouth') || lower.includes('origem') || lower.includes('história')) {
-                response = "O trabalho resgata desde a lógica dedutiva de Aristóteles e o modelo matemático de neurônio de McCulloch-Pitts (1943), passando pelo 'Jogo da Imitação' de Alan Turing em 1950, até a Conferência de Dartmouth em 1956, onde John McCarthy e Marvin Minsky cunharam oficialmente o termo 'Inteligência Artificial'.";
-            } else if (lower.includes('ética') || lower.includes('viés') || lower.includes('ambiental') || lower.includes('água') || lower.includes('energia')) {
-                response = "No aspecto social e ambiental, o TCC destaca que a IA traz benefícios (diagnósticos médicos, educação adaptativa), mas exige atenção para os desempregos tecnológicos, vieses algorítmicos discriminatórios e o elevado consumo hídrico e energético dos Data Centers necessários para resfriar e operar os modelos.";
-            } else if (lower.includes('ti') || lower.includes('código') || lower.includes('segurança') || lower.includes('copilot') || lower.includes('dados')) {
-                response = "Na área de TI, a IA atua no auxílio à programação com autocompletar e testes (GitHub Copilot), engenharia de dados (Big Data), gestão proativa de infraestrutura (AIOps), cibersegurança em tempo real e visão computacional para processos industriais.";
-            } else {
-                response = "O TCC do autor Pedro Pereira Leite (2026, Instituto Coração de Jesus) conclui que a IA não foi criada para substituir a mente humana, mas sim para atuar como uma ferramenta de ampliação da nossa capacidade intelectual e produtiva. Insira uma chave da Gemini API para respostas interativas ilimitadas!";
-            }
-
-            appendTerminal('ai', response);
+        function renderQuiz() {
+            const item = quizQuestions[quizIndex];
+            quizAnswered = false;
+            quizQuestionEl.textContent = item.q;
+            document.getElementById('quiz-progress').textContent = `Pergunta ${quizIndex + 1} de ${quizQuestions.length}`;
+            document.getElementById('quiz-progress-bar').style.width = `${((quizIndex + 1) / quizQuestions.length) * 100}%`;
+            document.getElementById('quiz-score').textContent = `Pontuação: ${quizScore}`;
+            quizOptionsEl.replaceChildren();
+            item.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'quiz-option w-full text-left rounded-xl border border-slate-700 bg-slate-950/70 p-4 text-sm text-slate-200 hover:border-cyan-400 transition-colors';
+                button.textContent = option;
+                button.addEventListener('click', () => answerQuiz(i));
+                quizOptionsEl.appendChild(button);
+            });
+            quizFeedbackEl.className = 'hidden mt-5 rounded-xl border p-4 text-sm';
+            quizFeedbackEl.textContent = '';
+            quizNextBtn.classList.add('hidden');
+            quizRestartBtn.classList.add('hidden');
         }
+
+        function answerQuiz(choice) {
+            if (quizAnswered) return;
+            quizAnswered = true;
+            const item = quizQuestions[quizIndex];
+            const correct = choice === item.correct;
+            if (correct) quizScore++;
+            [...quizOptionsEl.children].forEach((button, i) => {
+                button.disabled = true;
+                button.classList.remove('hover:border-cyan-400');
+                if (i === item.correct) button.classList.add('border-emerald-500', 'bg-emerald-500/10');
+                else if (i === choice) button.classList.add('border-rose-500', 'bg-rose-500/10');
+            });
+            quizFeedbackEl.className = `mt-5 rounded-xl border p-4 text-sm ${correct ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200' : 'border-amber-500/40 bg-amber-500/10 text-amber-100'}`;
+            quizFeedbackEl.textContent = `${correct ? 'Correto! ' : 'Ainda não. '} ${item.why}`;
+            document.getElementById('quiz-score').textContent = `Pontuação: ${quizScore}`;
+            if (quizIndex < quizQuestions.length - 1) quizNextBtn.classList.remove('hidden');
+            else {
+                quizFeedbackEl.textContent += ` Resultado final: ${quizScore} de ${quizQuestions.length}. ${quizScore === quizQuestions.length ? 'Excelente domínio do tema!' : 'Revise os cards do TCC e tente novamente!'}`;
+                quizRestartBtn.classList.remove('hidden');
+            }
+        }
+        quizNextBtn.addEventListener('click', () => { quizIndex++; renderQuiz(); });
+        quizRestartBtn.addEventListener('click', () => { quizIndex = 0; quizScore = 0; renderQuiz(); });
+        renderQuiz();
+
+        const challengeOptions = [...document.querySelectorAll('.challenge-option')];
+        const challengeFeedback = document.getElementById('challenge-feedback');
+        const challengeReset = document.getElementById('challenge-reset');
+        challengeOptions.forEach(button => button.addEventListener('click', () => {
+            if (challengeOptions.some(option => option.disabled)) return;
+            const correct = button.dataset.correct === 'true';
+            challengeOptions.forEach(option => {
+                option.disabled = true;
+                option.classList.remove('hover:border-purple-400');
+                if (option.dataset.correct === 'true') option.classList.add('border-emerald-500', 'bg-emerald-500/10');
+                else if (option === button) option.classList.add('border-rose-500', 'bg-rose-500/10');
+            });
+            challengeFeedback.className = `mt-5 rounded-xl border p-4 text-sm ${correct ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200' : 'border-amber-500/40 bg-amber-500/10 text-amber-100'}`;
+            challengeFeedback.textContent = correct ? 'Boa decisão! A IA pode errar e reproduzir vieses. Conferir informações e proteger dados pessoais são atitudes essenciais.' : 'Pense novamente: o uso responsável exige verificação, senso crítico e cuidado com informações privadas.';
+            challengeReset.classList.remove('hidden');
+        }));
+        challengeReset.addEventListener('click', () => {
+            challengeOptions.forEach(option => { option.disabled = false; option.classList.remove('border-emerald-500', 'bg-emerald-500/10', 'border-rose-500', 'bg-rose-500/10'); option.classList.add('hover:border-purple-400'); });
+            challengeFeedback.className = 'hidden mt-5 rounded-xl border p-4 text-sm';
+            challengeFeedback.textContent = '';
+            challengeReset.classList.add('hidden');
+        });
     </script>
 </body>
 </html>
