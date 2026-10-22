@@ -1,8 +1,8 @@
-
 const MODEL = 'gemini-3.5-flash-lite';
 
 const MAX_MESSAGES = 10;
 const MAX_MESSAGE_CHARS = 1200;
+const MAX_MODEL_MESSAGE_CHARS = 8000;
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX = 30;
 const REQUEST_TIMEOUT_MS = 24000;
@@ -10,7 +10,6 @@ const MAX_ATTEMPTS = 1;
 
 const API_KEY_ENV = 'GEMINI_API_KEY';
 
-// Limite simples por instância da função.
 const requestCounts = new Map();
 
 const SYSTEM_INSTRUCTION = `
@@ -85,6 +84,16 @@ function sendJson(res, statusCode, data) {
   return res.end(JSON.stringify(data));
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function retryDelay(attempt) {
+  const exponentialDelay = 1000 * (2 ** (attempt - 1));
+  const jitter = Math.floor(Math.random() * 500);
+  return exponentialDelay + jitter;
+}
+
 function normalizeMessages(input) {
   if (!Array.isArray(input)) return null;
 
@@ -99,7 +108,17 @@ function normalizeMessages(input) {
 
       const text = item.text.trim();
 
-      if (!text || text.length > MAX_MESSAGE_CHARS) return null;
+      if (!text) return null;
+
+      // Perguntas dos visitantes: até 1.200 caracteres.
+      // Respostas anteriores da IA podem ser maiores.
+      if (role === 'user' && text.length > MAX_MESSAGE_CHARS) {
+        return null;
+      }
+
+      if (role === 'model' && text.length > MAX_MODEL_MESSAGE_CHARS) {
+        return null;
+      }
 
       return {
         role,
@@ -132,7 +151,7 @@ function normalizeMessages(input) {
     }
   }
 
-  // Garante que o histórico comece com uma mensagem do usuário.
+  // O histórico precisa começar com uma mensagem do usuário.
   while (
     alternatingMessages.length > 0 &&
     alternatingMessages[0].role !== 'user'
@@ -200,7 +219,7 @@ module.exports = async function handler(req, res) {
 
   if (!messages) {
     return sendJson(res, 400, {
-      error: 'Mensagens inválidas. Envie uma pergunta com até 1.200 caracteres.'
+      error: 'Histórico inválido ou pergunta maior que 1.200 caracteres. Tente limpar a conversa e enviar uma pergunta mais curta.'
     });
   }
 
@@ -220,109 +239,122 @@ module.exports = async function handler(req, res) {
     }
   };
 
-  const controller = new AbortController();
+  let lastError = null;
 
-  const timeout = setTimeout(
-    () => controller.abort(),
-    REQUEST_TIMEOUT_MS
-  );
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const controller = new AbortController();
 
-  try {
-    const upstream = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey
-      },
-      body: JSON.stringify(payload),
-      signal: controller.signal
-    });
+    const timeout = setTimeout(
+      () => controller.abort(),
+      REQUEST_TIMEOUT_MS
+    );
 
-    const data = await upstream.json().catch(() => ({}));
-
-    if (!upstream.ok) {
-      const details = {
-        httpStatus: upstream.status,
-        status: data.error?.status || null,
-        message: data.error?.message || 'Sem detalhes fornecidos'
-      };
-
-      console.error(
-        'Erro da Gemini API:',
-        JSON.stringify(details)
-      );
-
-      if (upstream.status === 400 || upstream.status === 404) {
-        return sendJson(res, 502, {
-          error: 'Erro na solicitação ou modelo indisponível. Consulte os logs da Vercel.'
-        });
-      }
-
-      if (upstream.status === 401 || upstream.status === 403) {
-        return sendJson(res, 502, {
-          error: 'A chave da API foi recusada. Confira GEMINI_API_KEY na Vercel.'
-        });
-      }
-
-      if (upstream.status === 429) {
-        return sendJson(res, 429, {
-          error: 'Limite de uso da API atingido. Tente novamente mais tarde.'
-        });
-      }
-
-      return sendJson(res, 502, {
-        error: 'O Gemini está temporariamente indisponível. Tente novamente.'
+    try {
+      const upstream = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal
       });
-    }
 
-    const candidate = data.candidates?.[0];
+      const data = await upstream.json().catch(() => ({}));
 
-    const reply = candidate?.content?.parts
-      ?.map((part) =>
-        typeof part.text === 'string' ? part.text : ''
-      )
-      .filter(Boolean)
-      .join('\n')
-      .trim();
+      if (!upstream.ok) {
+        const details = {
+          attempt,
+          httpStatus: upstream.status,
+          status: data.error?.status || null,
+          message: data.error?.message || 'Sem detalhes fornecidos'
+        };
 
-    if (!reply) {
+        console.error(
+          'Erro da Gemini API:',
+          JSON.stringify(details)
+        );
+
+        if (upstream.status === 400 || upstream.status === 404) {
+          return sendJson(res, 502, {
+            error: 'Erro na solicitação ou modelo indisponível. Consulte os logs da Vercel.'
+          });
+        }
+
+        if (upstream.status === 401 || upstream.status === 403) {
+          return sendJson(res, 502, {
+            error: 'A chave da API foi recusada. Confira GEMINI_API_KEY na Vercel.'
+          });
+        }
+
+        if (upstream.status === 429) {
+          return sendJson(res, 429, {
+            error: 'Limite de uso da API atingido. Tente novamente mais tarde.'
+          });
+        }
+
+        return sendJson(res, 502, {
+          error: 'O Gemini está temporariamente indisponível. Tente novamente.'
+        });
+      }
+
+      const candidate = data.candidates?.[0];
+
+      const reply = candidate?.content?.parts
+        ?.map((part) =>
+          typeof part.text === 'string' ? part.text : ''
+        )
+        .filter(Boolean)
+        .join('\n')
+        .trim();
+
+      if (!reply) {
+        console.error(
+          'Gemini sem texto:',
+          JSON.stringify({
+            finishReason: candidate?.finishReason || null,
+            promptFeedback: data.promptFeedback || null
+          })
+        );
+
+        return sendJson(res, 502, {
+          error: 'O Gemini não retornou uma resposta em texto. Tente reformular a pergunta.'
+        });
+      }
+
+      if (candidate.finishReason === 'MAX_TOKENS') {
+        console.warn('A resposta atingiu o limite de tokens.');
+      }
+
+      return sendJson(res, 200, {
+        reply,
+        model: MODEL,
+        finishReason: candidate.finishReason || null
+      });
+    } catch (error) {
+      lastError = error;
+
       console.error(
-        'Gemini sem texto:',
+        'Falha ao conectar à Gemini API:',
         JSON.stringify({
-          finishReason: candidate?.finishReason || null,
-          promptFeedback: data.promptFeedback || null
+          attempt,
+          name: error?.name || 'Erro',
+          message: error?.message || 'Sem detalhes'
         })
       );
 
-      return sendJson(res, 502, {
-        error: 'O Gemini não retornou uma resposta em texto. Tente reformular a pergunta.'
-      });
+      if (attempt < MAX_ATTEMPTS) {
+        await sleep(retryDelay(attempt));
+        continue;
+      }
+    } finally {
+      clearTimeout(timeout);
     }
-
-    if (candidate.finishReason === 'MAX_TOKENS') {
-      console.warn('A resposta atingiu o limite de tokens.');
-    }
-
-    return sendJson(res, 200, {
-      reply,
-      model: MODEL,
-      finishReason: candidate.finishReason || null
-    });
-  } catch (error) {
-    console.error(
-      'Falha ao conectar à Gemini API:',
-      JSON.stringify({
-        name: error?.name || 'Erro',
-        message: error?.message || 'Sem detalhes'
-      })
-    );
-
-    return sendJson(res, 502, {
-      error: error?.name === 'AbortError'
-        ? 'O Gemini demorou demais para responder. Tente novamente.'
-        : 'Não foi possível conectar ao Gemini. Consulte os logs da Vercel.'
-    });
-  } finally {
-    clearTimeout(timeout);
   }
+
+  return sendJson(res, 502, {
+    error: lastError?.name === 'AbortError'
+      ? 'O Gemini demorou demais para responder. Tente novamente.'
+      : 'Não foi possível conectar ao Gemini. Consulte os logs da Vercel.'
+  });
 };
