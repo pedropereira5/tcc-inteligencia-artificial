@@ -165,11 +165,17 @@ module.exports = async function handler(req, res) {
           data.error?.status || 'unknown'
         );
 
-        if (upstream.status === 400 || upstream.status === 404) {
-          return sendJson(res, 502, {
-            error: 'O modelo não aceitou a solicitação. Verifique a configuração do Gemini.'
-          });
-        }
+       if (upstream.status === 400 || upstream.status === 404) {
+  console.error(
+    'Detalhes do erro Gemini:',
+    JSON.stringify(data.error || data)
+  );
+
+  return sendJson(res, 502, {
+    error: 'Erro na configuração do Gemini. Consulte os logs da Vercel.',
+    code: upstream.status
+  });
+}
 
         if (upstream.status === 401 || upstream.status === 403) {
           return sendJson(res, 502, {
