@@ -6,7 +6,10 @@ const MAX_MESSAGE_CHARS = 1200;
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX = 30;
 const REQUEST_TIMEOUT_MS = 12000;
-const MAX_ATTEMPTS = 3;
+
+// Duas tentativas para reduzir o risco de ultrapassar
+// o limite de execução de 30 segundos da Vercel.
+const MAX_ATTEMPTS = 2;
 
 const API_KEY_ENV = 'GEMINI_API_KEY';
 
@@ -128,10 +131,12 @@ function normalizeMessages(input) {
   const alternatingMessages = [];
 
   for (const message of validMessages) {
-    const previous = alternatingMessages[alternatingMessages.length - 1];
+    const previous =
+      alternatingMessages[alternatingMessages.length - 1];
 
     if (previous && previous.role === message.role) {
-      previous.parts[0].text += '\n\n' + message.parts[0].text;
+      previous.parts[0].text +=
+        '\n\n' + message.parts[0].text;
     } else {
       alternatingMessages.push({
         role: message.role,
@@ -140,11 +145,22 @@ function normalizeMessages(input) {
     }
   }
 
+  // Evita iniciar o histórico com uma resposta antiga da IA.
+  while (
+    alternatingMessages.length > 0 &&
+    alternatingMessages[0].role !== 'user'
+  ) {
+    alternatingMessages.shift();
+  }
+
+  if (alternatingMessages.length === 0) return null;
+
   return alternatingMessages;
 }
 
 function isRateLimited(req) {
   const forwarded = req.headers['x-forwarded-for'];
+
   const ip = typeof forwarded === 'string'
     ? forwarded.split(',')[0].trim()
     : 'unknown';
@@ -153,17 +169,23 @@ function isRateLimited(req) {
   const entry = requestCounts.get(ip);
 
   if (!entry || now - entry.start >= RATE_LIMIT_WINDOW_MS) {
-    requestCounts.set(ip, { start: now, count: 1 });
+    requestCounts.set(ip, {
+      start: now,
+      count: 1
+    });
+
     return false;
   }
 
   entry.count += 1;
+
   return entry.count > RATE_LIMIT_MAX;
 }
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
+
     return sendJson(res, 405, {
       error: 'Método não permitido.'
     });
@@ -178,7 +200,9 @@ module.exports = async function handler(req, res) {
   const apiKey = process.env[API_KEY_ENV];
 
   if (!apiKey) {
-    console.error(`Variável de ambiente ${API_KEY_ENV} não encontrada.`);
+    console.error(
+      `Variável de ambiente ${API_KEY_ENV} não encontrada.`
+    );
 
     return sendJson(res, 500, {
       error: 'A chave da API não está configurada na Vercel.'
@@ -211,7 +235,11 @@ module.exports = async function handler(req, res) {
 
   let lastError = null;
 
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+  for (
+    let attempt = 1;
+    attempt <= MAX_ATTEMPTS;
+    attempt++
+  ) {
     const controller = new AbortController();
 
     const timeout = setTimeout(
@@ -240,7 +268,10 @@ module.exports = async function handler(req, res) {
           message: data.error?.message || 'Sem detalhes fornecidos'
         };
 
-        console.error('Erro da Gemini API:', JSON.stringify(details));
+        console.error(
+          'Erro da Gemini API:',
+          JSON.stringify(details)
+        );
 
         const retryable =
           upstream.status === 408 ||
@@ -252,13 +283,19 @@ module.exports = async function handler(req, res) {
           continue;
         }
 
-        if (upstream.status === 400 || upstream.status === 404) {
+        if (
+          upstream.status === 400 ||
+          upstream.status === 404
+        ) {
           return sendJson(res, 502, {
             error: 'Erro na solicitação ou modelo indisponível. Consulte os logs da Vercel.'
           });
         }
 
-        if (upstream.status === 401 || upstream.status === 403) {
+        if (
+          upstream.status === 401 ||
+          upstream.status === 403
+        ) {
           return sendJson(res, 502, {
             error: 'A chave da API foi recusada. Confira GEMINI_API_KEY na Vercel.'
           });
@@ -278,7 +315,9 @@ module.exports = async function handler(req, res) {
       const candidate = data.candidates?.[0];
 
       const reply = candidate?.content?.parts
-        ?.map((part) => typeof part.text === 'string' ? part.text : '')
+        ?.map((part) =>
+          typeof part.text === 'string' ? part.text : ''
+        )
         .filter(Boolean)
         .join('\n')
         .trim();
@@ -298,7 +337,9 @@ module.exports = async function handler(req, res) {
       }
 
       if (candidate.finishReason === 'MAX_TOKENS') {
-        console.warn('A resposta atingiu o limite de tokens.');
+        console.warn(
+          'A resposta atingiu o limite de tokens.'
+        );
       }
 
       return sendJson(res, 200, {
