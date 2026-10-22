@@ -1,4 +1,4 @@
-const MODEL = 'gemini-3.8-flash';
+const MODEL = 'gemini-3.6-flash';
 const MAX_MESSAGES = 10;
 const MAX_MESSAGE_CHARS = 1200;
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
