@@ -1,15 +1,12 @@
 
-const MODEL = 'gemini-3.8-flash';
+const MODEL = 'gemini-3.5-flash-lite';
 
 const MAX_MESSAGES = 10;
 const MAX_MESSAGE_CHARS = 1200;
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX = 30;
-const REQUEST_TIMEOUT_MS = 12000;
-
-// Duas tentativas para reduzir o risco de ultrapassar
-// o limite de execução de 30 segundos da Vercel.
-const MAX_ATTEMPTS = 2;
+const REQUEST_TIMEOUT_MS = 24000;
+const MAX_ATTEMPTS = 1;
 
 const API_KEY_ENV = 'GEMINI_API_KEY';
 
@@ -88,16 +85,6 @@ function sendJson(res, statusCode, data) {
   return res.end(JSON.stringify(data));
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function retryDelay(attempt) {
-  const exponentialDelay = 1000 * (2 ** (attempt - 1));
-  const jitter = Math.floor(Math.random() * 500);
-  return exponentialDelay + jitter;
-}
-
 function normalizeMessages(input) {
   if (!Array.isArray(input)) return null;
 
@@ -145,7 +132,7 @@ function normalizeMessages(input) {
     }
   }
 
-  // Evita iniciar o histórico com uma resposta antiga da IA.
+  // Garante que o histórico comece com uma mensagem do usuário.
   while (
     alternatingMessages.length > 0 &&
     alternatingMessages[0].role !== 'user'
@@ -226,151 +213,116 @@ module.exports = async function handler(req, res) {
     },
     contents: messages,
     generationConfig: {
-      maxOutputTokens: 1500,
+      maxOutputTokens: 800,
       thinkingConfig: {
         thinkingLevel: 'low'
       }
     }
   };
 
-  let lastError = null;
+  const controller = new AbortController();
 
-  for (
-    let attempt = 1;
-    attempt <= MAX_ATTEMPTS;
-    attempt++
-  ) {
-    const controller = new AbortController();
+  const timeout = setTimeout(
+    () => controller.abort(),
+    REQUEST_TIMEOUT_MS
+  );
 
-    const timeout = setTimeout(
-      () => controller.abort(),
-      REQUEST_TIMEOUT_MS
-    );
+  try {
+    const upstream = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
 
-    try {
-      const upstream = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal
-      });
+    const data = await upstream.json().catch(() => ({}));
 
-      const data = await upstream.json().catch(() => ({}));
-
-      if (!upstream.ok) {
-        const details = {
-          attempt,
-          httpStatus: upstream.status,
-          status: data.error?.status || null,
-          message: data.error?.message || 'Sem detalhes fornecidos'
-        };
-
-        console.error(
-          'Erro da Gemini API:',
-          JSON.stringify(details)
-        );
-
-        const retryable =
-          upstream.status === 408 ||
-          upstream.status === 429 ||
-          upstream.status >= 500;
-
-        if (retryable && attempt < MAX_ATTEMPTS) {
-          await sleep(retryDelay(attempt));
-          continue;
-        }
-
-        if (
-          upstream.status === 400 ||
-          upstream.status === 404
-        ) {
-          return sendJson(res, 502, {
-            error: 'Erro na solicitação ou modelo indisponível. Consulte os logs da Vercel.'
-          });
-        }
-
-        if (
-          upstream.status === 401 ||
-          upstream.status === 403
-        ) {
-          return sendJson(res, 502, {
-            error: 'A chave da API foi recusada. Confira GEMINI_API_KEY na Vercel.'
-          });
-        }
-
-        if (upstream.status === 429) {
-          return sendJson(res, 429, {
-            error: 'Limite de uso da API atingido. Tente novamente mais tarde.'
-          });
-        }
-
-        return sendJson(res, 502, {
-          error: 'O Gemini está temporariamente indisponível. Tente novamente.'
-        });
-      }
-
-      const candidate = data.candidates?.[0];
-
-      const reply = candidate?.content?.parts
-        ?.map((part) =>
-          typeof part.text === 'string' ? part.text : ''
-        )
-        .filter(Boolean)
-        .join('\n')
-        .trim();
-
-      if (!reply) {
-        console.error(
-          'Gemini sem texto:',
-          JSON.stringify({
-            finishReason: candidate?.finishReason || null,
-            promptFeedback: data.promptFeedback || null
-          })
-        );
-
-        return sendJson(res, 502, {
-          error: 'O Gemini não retornou uma resposta em texto. Tente reformular a pergunta.'
-        });
-      }
-
-      if (candidate.finishReason === 'MAX_TOKENS') {
-        console.warn(
-          'A resposta atingiu o limite de tokens.'
-        );
-      }
-
-      return sendJson(res, 200, {
-        reply,
-        model: MODEL,
-        finishReason: candidate.finishReason || null
-      });
-    } catch (error) {
-      lastError = error;
+    if (!upstream.ok) {
+      const details = {
+        httpStatus: upstream.status,
+        status: data.error?.status || null,
+        message: data.error?.message || 'Sem detalhes fornecidos'
+      };
 
       console.error(
-        'Falha ao conectar à Gemini API:',
+        'Erro da Gemini API:',
+        JSON.stringify(details)
+      );
+
+      if (upstream.status === 400 || upstream.status === 404) {
+        return sendJson(res, 502, {
+          error: 'Erro na solicitação ou modelo indisponível. Consulte os logs da Vercel.'
+        });
+      }
+
+      if (upstream.status === 401 || upstream.status === 403) {
+        return sendJson(res, 502, {
+          error: 'A chave da API foi recusada. Confira GEMINI_API_KEY na Vercel.'
+        });
+      }
+
+      if (upstream.status === 429) {
+        return sendJson(res, 429, {
+          error: 'Limite de uso da API atingido. Tente novamente mais tarde.'
+        });
+      }
+
+      return sendJson(res, 502, {
+        error: 'O Gemini está temporariamente indisponível. Tente novamente.'
+      });
+    }
+
+    const candidate = data.candidates?.[0];
+
+    const reply = candidate?.content?.parts
+      ?.map((part) =>
+        typeof part.text === 'string' ? part.text : ''
+      )
+      .filter(Boolean)
+      .join('\n')
+      .trim();
+
+    if (!reply) {
+      console.error(
+        'Gemini sem texto:',
         JSON.stringify({
-          attempt,
-          name: error?.name || 'Erro',
-          message: error?.message || 'Sem detalhes'
+          finishReason: candidate?.finishReason || null,
+          promptFeedback: data.promptFeedback || null
         })
       );
 
-      if (attempt < MAX_ATTEMPTS) {
-        await sleep(retryDelay(attempt));
-        continue;
-      }
-    } finally {
-      clearTimeout(timeout);
+      return sendJson(res, 502, {
+        error: 'O Gemini não retornou uma resposta em texto. Tente reformular a pergunta.'
+      });
     }
-  }
 
-  return sendJson(res, 502, {
-    error: lastError?.name === 'AbortError'
-      ? 'O Gemini demorou demais para responder. Tente novamente.'
-      : 'Não foi possível conectar ao Gemini. Consulte os logs da Vercel.'
-  });
+    if (candidate.finishReason === 'MAX_TOKENS') {
+      console.warn('A resposta atingiu o limite de tokens.');
+    }
+
+    return sendJson(res, 200, {
+      reply,
+      model: MODEL,
+      finishReason: candidate.finishReason || null
+    });
+  } catch (error) {
+    console.error(
+      'Falha ao conectar à Gemini API:',
+      JSON.stringify({
+        name: error?.name || 'Erro',
+        message: error?.message || 'Sem detalhes'
+      })
+    );
+
+    return sendJson(res, 502, {
+      error: error?.name === 'AbortError'
+        ? 'O Gemini demorou demais para responder. Tente novamente.'
+        : 'Não foi possível conectar ao Gemini. Consulte os logs da Vercel.'
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 };
