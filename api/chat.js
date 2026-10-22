@@ -8,7 +8,7 @@ const RATE_LIMIT_MAX = 30;
 const REQUEST_TIMEOUT_MS = 20000;
 const MAX_ATTEMPTS = 2;
 
-const API_KEY_ENV = 'AQ.Ab8RN6LcqWY9AsVRn6gWsMVVfzjFGaaZLzmGc1KfW1bH3o4ijw';
+const API_KEY_ENV = 'AIzaSyCGV2uQHB4B6f7YlOSfX2oxhB_Co2ObByk';
 
 // Limite simples por instância da função.
 const requestCounts = new Map();
