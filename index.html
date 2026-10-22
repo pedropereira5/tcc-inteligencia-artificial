@@ -87,69 +87,38 @@
             </div>
         </div>
 
-        <!-- SIMULADOR INTEGRADO DIRETAMENTE AO GEMINI -->
-        <section class="mb-16">
-            <div class="relative rounded-3xl overflow-hidden border border-cyan-500/40 bg-slate-950/90 backdrop-blur-3xl p-6 sm:p-10 shadow-2xl shadow-cyan-500/10">
-                
-                <div class="absolute inset-0 pointer-events-none opacity-20 z-0">
-                    <canvas id="neuralCanvas"></canvas>
-                </div>
-
+        <!-- ASSISTENTE J.A.R.V.I.S. — interface inspirada em assistentes de ficção científica -->
+        <section id="jarvis" class="mb-16 scroll-mt-8">
+            <div class="relative rounded-3xl overflow-hidden border border-cyan-400/30 bg-slate-950/90 backdrop-blur-3xl p-5 sm:p-8 shadow-2xl shadow-cyan-500/10">
+                <div class="absolute inset-0 pointer-events-none opacity-20 z-0"><canvas id="neuralCanvas"></canvas></div>
+                <div class="absolute -top-24 -right-20 w-72 h-72 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none"></div>
                 <div class="relative z-10">
-                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-800">
-                        <div>
-                            <div class="inline-flex items-center gap-2 text-cyan-400 text-xs font-bold tracking-widest uppercase mb-1">
-                                <i data-lucide="sparkles" class="w-4 h-4"></i> Google Gemini API &bull; TCC Inteligente
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-cyan-900/70">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 rounded-2xl border border-cyan-400/40 bg-cyan-400/10 flex items-center justify-center shadow-lg shadow-cyan-500/10"><i data-lucide="cpu" class="w-7 h-7 text-cyan-300"></i></div>
+                            <div>
+                                <div class="flex items-center gap-2 text-cyan-300 text-[10px] sm:text-xs font-bold tracking-[.25em] uppercase mb-1"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Sistema operacional</div>
+                                <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">J.A.R.V.I.S.</h2>
+                                <p class="text-slate-400 text-xs sm:text-sm mt-1">Assistente experimental do projeto • Inteligência Artificial e TI</p>
                             </div>
-                            <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Assistente interativo do TCC</h2>
-                            <p class="text-slate-400 text-sm">Converse com o Gemini sobre os temas do TCC. A chave da API fica protegida no servidor, nunca neste navegador.</p>
                         </div>
-                        
-                        <div class="text-xs text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-xl">Gemini via servidor • chave protegida</div>
+                        <div class="inline-flex items-center gap-2 self-start sm:self-auto rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-[10px] font-mono tracking-widest text-emerald-300"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> ONLINE</div>
                     </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="space-y-3">
-                            <p class="text-xs uppercase tracking-wider text-slate-400 font-bold mb-2">Perguntas Sugeridas:</p>
-                            
-                            <button onclick="sendPresetPrompt('Qual a diferença entre IA Fraca e IA Forte segundo o TCC?')" class="w-full text-left p-3 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-cyan-500/60 hover:bg-cyan-500/5 transition-all text-xs text-slate-300 flex items-center justify-between group">
-                                <span class="font-medium text-white">1. IA Fraca vs. IA Forte</span>
-                                <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-cyan-400 group-hover:translate-x-1 transition-transform"></i>
-                            </button>
-
-                            <button onclick="sendPresetPrompt('Quais os impactos éticos e ambientais da IA nos data centers?')" class="w-full text-left p-3 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-indigo-500/60 hover:bg-indigo-500/5 transition-all text-xs text-slate-300 flex items-center justify-between group">
-                                <span class="font-medium text-white">2. Impacto Ambiental e Ético</span>
-                                <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-indigo-400 group-hover:translate-x-1 transition-transform"></i>
-                            </button>
-
-                            <button onclick="sendPresetPrompt('Como a IA atua na infraestrutura de TI, cibersegurança e programação?')" class="w-full text-left p-3 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-purple-500/60 hover:bg-purple-500/5 transition-all text-xs text-slate-300 flex items-center justify-between group">
-                                <span class="font-medium text-white">3. IA na Tecnologia da Informação</span>
-                                <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-purple-400 group-hover:translate-x-1 transition-transform"></i>
-                            </button>
-                        </div>
-
-                        <div class="lg:col-span-2 flex flex-col bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden h-[360px] shadow-inner">
-                            <div class="bg-slate-900/90 px-4 py-2.5 border-b border-slate-800 flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-3 h-3 rounded-full bg-rose-500/80"></span>
-                                    <span class="w-3 h-3 rounded-full bg-amber-500/80"></span>
-                                    <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
-                                    <span class="text-xs font-mono text-cyan-400 ml-2">gemini-3.8-flash • contexto do TCC</span>
-                                </div>
-                                <button onclick="clearTerminal()" class="text-xs text-slate-400 hover:text-white transition-colors">Limpar Chat</button>
-                            </div>
-
-                            <div id="ai-terminal-output" class="p-4 flex-1 overflow-y-auto font-mono text-xs sm:text-sm text-slate-300 space-y-3">
-                                <div class="text-cyan-400 font-semibold">&gt; [SISTEMA]: Assistente Gemini pronto. Pergunte sobre os temas abordados no TCC!</div>
-                            </div>
-
-                            <div class="p-3 bg-slate-900/80 border-t border-slate-800 flex gap-2">
-                                <input type="text" id="ai-custom-input" placeholder="Pergunte sobre o TCC..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 font-mono" onkeypress="handleKeyPress(event)">
-                                <button id="ai-send-button" onclick="sendCustomMessage()" class="px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-400 hover:to-indigo-400 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-lg shadow-cyan-500/20">Enviar</button>
-                            </div>
-                            <p class="px-3 pb-3 bg-slate-900/80 text-[11px] text-slate-500">Evite enviar senhas, dados pessoais ou informações privadas. As respostas são geradas pela API Gemini.</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                        <aside class="space-y-3">
+                            <div class="mb-3"><p class="text-[10px] uppercase tracking-[.2em] text-slate-500 font-bold">Protocolos de consulta</p><p class="text-sm text-slate-300 mt-1">Selecione um tópico para iniciar a conversa.</p></div>
+                            <button type="button" onclick="sendPresetPrompt('Qual a diferença entre IA Fraca e IA Forte segundo o TCC?')" class="w-full text-left p-4 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-cyan-400/60 hover:bg-cyan-400/5 transition-all group"><span class="flex items-center justify-between gap-3"><span><span class="block text-[10px] text-cyan-400 font-mono mb-1">PROTOCOLO 01</span><span class="text-sm font-semibold text-white">IA Fraca vs. IA Forte</span></span><i data-lucide="arrow-up-right" class="w-4 h-4 text-cyan-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"></i></span></button>
+                            <button type="button" onclick="sendPresetPrompt('Quais são os impactos éticos e ambientais da inteligência artificial?')" class="w-full text-left p-4 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-cyan-400/60 hover:bg-cyan-400/5 transition-all group"><span class="flex items-center justify-between gap-3"><span><span class="block text-[10px] text-cyan-400 font-mono mb-1">PROTOCOLO 02</span><span class="text-sm font-semibold text-white">Ética e meio ambiente</span></span><i data-lucide="arrow-up-right" class="w-4 h-4 text-cyan-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"></i></span></button>
+                            <button type="button" onclick="sendPresetPrompt('Como a inteligência artificial é aplicada em Ciência da Computação, programação e cibersegurança?')" class="w-full text-left p-4 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-cyan-400/60 hover:bg-cyan-400/5 transition-all group"><span class="flex items-center justify-between gap-3"><span><span class="block text-[10px] text-cyan-400 font-mono mb-1">PROTOCOLO 03</span><span class="text-sm font-semibold text-white">IA na área de TI</span></span><i data-lucide="arrow-up-right" class="w-4 h-4 text-cyan-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"></i></span></button>
+                            <div class="rounded-xl border border-cyan-900/70 bg-cyan-950/20 p-3 text-[11px] leading-relaxed text-slate-400"><i data-lucide="shield-check" class="inline w-3.5 h-3.5 text-cyan-300 mr-1"></i> Conexão protegida pelo servidor. Não envie senhas nem dados pessoais.</div>
+                        </aside>
+                        <div class="lg:col-span-2 min-w-0 rounded-2xl border border-cyan-900/70 bg-[#020617] overflow-hidden flex flex-col min-h-[420px] shadow-inner shadow-black/50">
+                            <div class="px-4 py-3 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between gap-3"><div class="flex items-center gap-3 min-w-0"><div class="flex gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-400/80"></span><span class="w-2.5 h-2.5 rounded-full bg-amber-300/80"></span><span class="w-2.5 h-2.5 rounded-full bg-emerald-400/80"></span></div><span class="text-[10px] sm:text-xs font-mono text-cyan-300 truncate">JARVIS_TERMINAL // TCC_AI</span></div><button type="button" onclick="clearTerminal()" class="shrink-0 text-[10px] uppercase tracking-wider text-slate-500 hover:text-cyan-300 transition-colors">Limpar sessão</button></div>
+                            <div id="ai-terminal-output" aria-live="polite" class="p-4 sm:p-5 flex-1 overflow-y-auto font-mono text-xs sm:text-sm text-slate-300 space-y-4 max-h-[440px]"><div class="flex gap-3"><div class="shrink-0 w-8 h-8 rounded-lg bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center"><i data-lucide="bot" class="w-4 h-4 text-cyan-300"></i></div><div class="min-w-0"><div class="text-cyan-300 text-[10px] font-bold tracking-widest mb-1">J.A.R.V.I.S. // INICIALIZAÇÃO</div><p class="text-slate-300 leading-relaxed">Boa noite. Sou o J.A.R.V.I.S., assistente experimental deste TCC. Posso explicar conceitos de Inteligência Artificial, suas aplicações na sociedade e na Tecnologia da Informação. Como posso ajudar?</p></div></div></div>
+                            <form class="p-3 sm:p-4 bg-slate-900/70 border-t border-slate-800" onsubmit="event.preventDefault(); sendCustomMessage();"><label for="ai-custom-input" class="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Entrada de comando</label><div class="flex gap-2"><input type="text" id="ai-custom-input" maxlength="1200" autocomplete="off" placeholder="Digite sua pergunta para o J.A.R.V.I.S..." class="min-w-0 flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 sm:px-4 py-3 text-xs sm:text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30 font-mono"><button type="submit" id="ai-send-button" class="shrink-0 px-4 sm:px-5 py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-extrabold text-xs transition-all"><span class="flex items-center gap-2"><i data-lucide="send" class="w-3.5 h-3.5"></i><span>Enviar</span></span></button></div><p class="mt-2 text-[10px] text-slate-600">Respostas geradas por IA podem conter erros. Use senso crítico e confira informações importantes.</p></form>
                         </div>
                     </div>
+                    <p class="mt-4 text-[10px] text-slate-600 text-center">J.A.R.V.I.S. é um nome de interface inspirado em assistentes fictícios; a resposta é gerada pela API de IA configurada neste projeto escolar.</p>
                 </div>
             </div>
         </section>
@@ -442,16 +411,30 @@
 
         function appendTerminal(sender, message) {
             const terminal = document.getElementById('ai-terminal-output');
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'leading-relaxed whitespace-pre-wrap';
-            const label = document.createElement('span');
-            label.className = sender === 'user' ? 'text-cyan-400 font-bold' : 'text-emerald-400 font-bold';
-            label.textContent = sender === 'user' ? '> Você: ' : '> Gemini: ';
-            const body = document.createElement('span');
-            body.className = 'text-slate-200';
+            if (!terminal) return;
+            const isUser = sender === 'user';
+            const wrapper = document.createElement('div');
+            wrapper.className = 'flex gap-3';
+            const avatar = document.createElement('div');
+            avatar.className = isUser
+                ? 'shrink-0 w-8 h-8 rounded-lg bg-indigo-400/10 border border-indigo-400/20 flex items-center justify-center'
+                : 'shrink-0 w-8 h-8 rounded-lg bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center';
+            const icon = document.createElement('i');
+            icon.setAttribute('data-lucide', isUser ? 'user-round' : 'bot');
+            icon.className = isUser ? 'w-4 h-4 text-indigo-300' : 'w-4 h-4 text-cyan-300';
+            avatar.appendChild(icon);
+            const content = document.createElement('div');
+            content.className = 'min-w-0 flex-1';
+            const label = document.createElement('div');
+            label.className = `text-[10px] font-bold tracking-widest mb-1 ${isUser ? 'text-indigo-300' : 'text-cyan-300'}`;
+            label.textContent = isUser ? 'USUÁRIO // ENTRADA' : 'J.A.R.V.I.S. // RESPOSTA';
+            const body = document.createElement('p');
+            body.className = 'text-slate-200 leading-relaxed whitespace-pre-wrap break-words';
             body.textContent = message;
-            msgDiv.append(label, body);
-            terminal.appendChild(msgDiv);
+            content.append(label, body);
+            wrapper.append(avatar, content);
+            terminal.appendChild(wrapper);
+            if (window.lucide) lucide.createIcons();
             terminal.scrollTop = terminal.scrollHeight;
         }
 
@@ -461,7 +444,8 @@
             terminal.replaceChildren();
             const message = document.createElement('div');
             message.className = 'text-cyan-400 font-bold';
-            message.textContent = '> [SISTEMA]: Histórico desta conversa limpo. Pode começar novamente.';
+            message.className = 'text-cyan-300 font-mono text-xs';
+            message.textContent = '> J.A.R.V.I.S.: Histórico da conversa limpo. Sistemas prontos.';
             terminal.appendChild(message);
         }
 
@@ -491,12 +475,12 @@
             input.value = '';
             chatBusy = true;
             sendButton.disabled = true;
-            sendButton.textContent = 'Pensando…';
+            sendButton.textContent = 'Processando…';
 
             const pending = document.createElement('div');
             pending.id = 'gemini-pending';
-            pending.className = 'text-indigo-300 italic';
-            pending.textContent = '> Gemini está elaborando a resposta…';
+            pending.className = 'text-cyan-300 italic animate-pulse font-mono text-xs';
+            pending.textContent = '> J.A.R.V.I.S. está processando sua solicitação…';
             document.getElementById('ai-terminal-output').appendChild(pending);
             document.getElementById('ai-terminal-output').scrollTop = document.getElementById('ai-terminal-output').scrollHeight;
 
@@ -519,7 +503,8 @@
             } finally {
                 chatBusy = false;
                 sendButton.disabled = false;
-                sendButton.textContent = 'Enviar';
+                sendButton.innerHTML = '<span class="flex items-center gap-2"><i data-lucide="send" class="w-3.5 h-3.5"></i><span>Enviar</span></span>';
+                if (window.lucide) lucide.createIcons();
                 input.focus();
             }
         }
