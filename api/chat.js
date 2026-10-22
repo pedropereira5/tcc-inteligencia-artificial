@@ -5,8 +5,8 @@ const MAX_MESSAGES = 10;
 const MAX_MESSAGE_CHARS = 1200;
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX = 30;
-const REQUEST_TIMEOUT_MS = 20000;
-const MAX_ATTEMPTS = 2;
+const REQUEST_TIMEOUT_MS = 12000;
+const MAX_ATTEMPTS = 3;
 
 const API_KEY_ENV = 'GEMINI_API_KEY';
 
@@ -85,6 +85,16 @@ function sendJson(res, statusCode, data) {
   return res.end(JSON.stringify(data));
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function retryDelay(attempt) {
+  const exponentialDelay = 1000 * (2 ** (attempt - 1));
+  const jitter = Math.floor(Math.random() * 500);
+  return exponentialDelay + jitter;
+}
+
 function normalizeMessages(input) {
   if (!Array.isArray(input)) return null;
 
@@ -108,14 +118,13 @@ function normalizeMessages(input) {
     });
 
   if (validMessages.some((item) => item === null)) return null;
-
   if (validMessages.length === 0) return null;
 
   if (validMessages[validMessages.length - 1].role !== 'user') {
     return null;
   }
 
-  // O Gemini exige que as mensagens alternem entre usuário e modelo.
+  // O Gemini exige alternância entre usuário e modelo.
   const alternatingMessages = [];
 
   for (const message of validMessages) {
@@ -193,8 +202,10 @@ module.exports = async function handler(req, res) {
     },
     contents: messages,
     generationConfig: {
-      temperature: 0.4,
-      maxOutputTokens: 1500
+      maxOutputTokens: 1500,
+      thinkingConfig: {
+        thinkingLevel: 'low'
+      }
     }
   };
 
@@ -202,6 +213,7 @@ module.exports = async function handler(req, res) {
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const controller = new AbortController();
+
     const timeout = setTimeout(
       () => controller.abort(),
       REQUEST_TIMEOUT_MS
@@ -222,6 +234,7 @@ module.exports = async function handler(req, res) {
 
       if (!upstream.ok) {
         const details = {
+          attempt,
           httpStatus: upstream.status,
           status: data.error?.status || null,
           message: data.error?.message || 'Sem detalhes fornecidos'
@@ -229,11 +242,13 @@ module.exports = async function handler(req, res) {
 
         console.error('Erro da Gemini API:', JSON.stringify(details));
 
-        if (
-          attempt < MAX_ATTEMPTS &&
-          (upstream.status === 429 || upstream.status === 503)
-        ) {
-          await new Promise((resolve) => setTimeout(resolve, 700));
+        const retryable =
+          upstream.status === 408 ||
+          upstream.status === 429 ||
+          upstream.status >= 500;
+
+        if (retryable && attempt < MAX_ATTEMPTS) {
+          await sleep(retryDelay(attempt));
           continue;
         }
 
@@ -296,16 +311,17 @@ module.exports = async function handler(req, res) {
 
       console.error(
         'Falha ao conectar à Gemini API:',
-        error?.name || 'Erro',
-        error?.message || 'Sem detalhes'
+        JSON.stringify({
+          attempt,
+          name: error?.name || 'Erro',
+          message: error?.message || 'Sem detalhes'
+        })
       );
 
-      if (attempt < MAX_ATTEMPTS && error?.name !== 'AbortError') {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+      if (attempt < MAX_ATTEMPTS) {
+        await sleep(retryDelay(attempt));
         continue;
       }
-
-      break;
     } finally {
       clearTimeout(timeout);
     }
