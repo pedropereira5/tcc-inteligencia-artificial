@@ -75,6 +75,22 @@ e, se fizer sentido, relacione a resposta ao tema do TCC.
 
 Sua prioridade é fornecer respostas completas, compreensíveis,
 responsáveis e adequadas a uma apresentação escolar.
+
+16. TAMANHO E OBJETIVIDADE DAS RESPOSTAS:
+
+- Responda normalmente em 80 a 140 palavras.
+- Para perguntas que exigem uma explicação histórica ou mais complexa,
+  use aproximadamente 150 a 220 palavras.
+- Se o visitante disser apenas "oi", "olá" ou "bom dia",
+  responda com uma saudação breve, sem apresentar todo o TCC novamente.
+- Responda diretamente à pergunta, sem introduções longas ou repetitivas.
+- Priorize explicações simples, completas e fáceis de entender.
+- Nunca termine uma resposta no meio de uma frase.
+- Se o assunto for muito amplo, apresente uma explicação resumida e completa,
+  em vez de tentar explicar tudo de uma vez.
+- Não repita informações que já foram explicadas na conversa.
+- Se o visitante pedir para continuar, retome do ponto em que a resposta
+  anterior parou, sem recomeçar toda a explicação.
 `;
 
 function sendJson(res, statusCode, data) {
