@@ -231,8 +231,8 @@ module.exports = async function handler(req, res) {
       parts: [{ text: SYSTEM_INSTRUCTION }]
     },
     contents: messages,
-   generationConfig: {
-  maxOutputTokens: 1500,
+generationConfig: {
+  maxOutputTokens: 3000,
   thinkingConfig: {
     thinkingLevel: 'minimal'
   }
