@@ -61,7 +61,7 @@ Se o projeto Vercel ainda não estiver conectado ao repositório, em Vercel use 
 - Não peça aos visitantes que enviem senhas, documentos ou dados privados. Evite colocar informações pessoais no chat.
 - As respostas são geradas por IA e podem conter erros. Para conteúdo específico do trabalho, confira o TCC original.
 - A API Gemini pode ter limites ou custos de acordo com a conta, modelo e condições vigentes. Confira o painel do Google antes de deixar o chat público por longos períodos.
-
+Atualização para testar o deploy
 ## Desenvolvimento local (opcional)
 
 Uma página aberta diretamente como `file://` não consegue executar `/api/chat`. Para testar a função localmente, instale Node.js e a CLI da Vercel, faça login e rode `vercel dev` na pasta do projeto. Configure `GEMINI_API_KEY` no ambiente local sem publicar esse segredo. Nunca adicione a chave real ao Git.
