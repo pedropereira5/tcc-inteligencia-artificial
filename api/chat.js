@@ -1,11 +1,12 @@
 
-const MODEL = 'gemini-3.6-flash';
+const MODEL = 'gemini-2.5-flash';
+
 const MAX_MESSAGES = 10;
 const MAX_MESSAGE_CHARS = 1200;
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX = 30;
 
-const REQUEST_TIMEOUT_MS = 12000;
+const REQUEST_TIMEOUT_MS = 10000;
 const MAX_ATTEMPTS = 2;
 
 const requestCounts = new Map();
@@ -54,6 +55,7 @@ module.exports = async function handler(req, res) {
 
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
+
     return sendJson(res, 405, {
       error: 'Método não permitido. Use POST.'
     });
@@ -122,68 +124,50 @@ module.exports = async function handler(req, res) {
     },
     contents: messages,
     generationConfig: {
-      temperature: 0.4,
-      maxOutputTokens: 500
+      temperature: 0.4
     }
   };
 
-  try {
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-      const controller = new AbortController();
-      const timeout = setTimeout(
-        () => controller.abort(),
-        REQUEST_TIMEOUT_MS
-      );
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(
+      () => controller.abort(),
+      REQUEST_TIMEOUT_MS
+    );
 
-      let upstream;
-
-      try {
-        upstream = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': apiKey
-          },
-          body: JSON.stringify(payload),
-          signal: controller.signal
-        });
-      } catch (error) {
-        clearTimeout(timeout);
-
-        console.error(
-          'Gemini connection failed:',
-          error?.name || 'unknown error'
-        );
-
-        if (attempt < MAX_ATTEMPTS) {
-          await wait(500);
-          continue;
-        }
-
-        return sendJson(res, 502, {
-          error: 'Não consegui conectar ao assistente agora. Tente novamente em alguns segundos.'
-        });
-      } finally {
-        clearTimeout(timeout);
-      }
+    try {
+      const upstream = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
 
       if (
         (upstream.status === 503 || upstream.status === 429) &&
         attempt < MAX_ATTEMPTS
       ) {
         await upstream.body?.cancel().catch(() => {});
-        await wait(700);
+        clearTimeout(timeout);
+        await wait(500);
         continue;
       }
 
       const data = await upstream.json().catch(() => ({}));
 
       if (!upstream.ok) {
-        console.error('Gemini API error status:', upstream.status);
+        console.error(
+          'Gemini API error:',
+          upstream.status,
+          data.error?.status || 'unknown'
+        );
 
         if (upstream.status === 400 || upstream.status === 404) {
           return sendJson(res, 502, {
-            error: 'O assistente encontrou um problema na configuração do modelo.'
+            error: 'O modelo não aceitou a solicitação. Verifique a configuração do Gemini.'
           });
         }
 
@@ -195,16 +179,18 @@ module.exports = async function handler(req, res) {
 
         if (upstream.status === 429) {
           return sendJson(res, 429, {
-            error: 'O assistente está recebendo muitas solicitações. Aguarde alguns segundos e tente novamente.'
+            error: 'O assistente está ocupado. Aguarde alguns segundos e tente novamente.'
           });
         }
 
         return sendJson(res, 502, {
-          error: 'O J.A.R.V.I.S. está temporariamente indisponível. Tente novamente em alguns segundos.'
+          error: 'O J.A.R.V.I.S. está temporariamente indisponível. Tente novamente em instantes.'
         });
       }
 
-      const reply = data.candidates?.[0]?.content?.parts
+      const candidate = data.candidates?.[0];
+
+      const reply = candidate?.content?.parts
         ?.map((part) =>
           typeof part.text === 'string' ? part.text : ''
         )
@@ -212,28 +198,53 @@ module.exports = async function handler(req, res) {
         .trim();
 
       if (!reply) {
+        console.error(
+          'Gemini returned no text. Finish reason:',
+          candidate?.finishReason || 'unknown'
+        );
+
         return sendJson(res, 502, {
-          error: 'Não consegui gerar uma resposta desta vez. Reformule sua pergunta e tente novamente.'
+          error: 'Não consegui concluir uma resposta desta vez. Tente reformular a pergunta.'
         });
+      }
+
+      if (
+        candidate.finishReason &&
+        candidate.finishReason !== 'STOP'
+      ) {
+        console.warn(
+          'Gemini response finish reason:',
+          candidate.finishReason
+        );
       }
 
       return sendJson(res, 200, {
         reply,
-        model: MODEL
+        model: MODEL,
+        finishReason: candidate.finishReason || null
       });
+    } catch (error) {
+      console.error(
+        'Gemini request failed:',
+        error?.name || 'unknown error'
+      );
+
+      if (attempt < MAX_ATTEMPTS) {
+        await wait(500);
+        continue;
+      }
+
+      return sendJson(res, 502, {
+        error: error?.name === 'AbortError'
+          ? 'O J.A.R.V.I.S. demorou demais para responder. Tente uma pergunta mais curta.'
+          : 'Não consegui conectar ao Gemini agora. Tente novamente em instantes.'
+      });
+    } finally {
+      clearTimeout(timeout);
     }
-
-    return sendJson(res, 502, {
-      error: 'O J.A.R.V.I.S. está temporariamente indisponível. Tente novamente.'
-    });
-  } catch (error) {
-    console.error(
-      'Chat handler failed:',
-      error?.name || 'unknown error'
-    );
-
-    return sendJson(res, 502, {
-      error: 'Ocorreu uma falha temporária. Tente novamente em alguns segundos.'
-    });
   }
+
+  return sendJson(res, 502, {
+    error: 'O J.A.R.V.I.S. está temporariamente indisponível. Tente novamente.'
+  });
 };
