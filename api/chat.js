@@ -231,12 +231,12 @@ module.exports = async function handler(req, res) {
       parts: [{ text: SYSTEM_INSTRUCTION }]
     },
     contents: messages,
-    generationConfig: {
-      maxOutputTokens: 800,
-      thinkingConfig: {
-        thinkingLevel: 'low'
-      }
-    }
+   generationConfig: {
+  maxOutputTokens: 1500,
+  thinkingConfig: {
+    thinkingLevel: 'minimal'
+  }
+}
   };
 
   let lastError = null;
